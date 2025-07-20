@@ -61,7 +61,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				'interview-success': {
+					DEFAULT: 'hsl(var(--interview-success))',
+					foreground: 'hsl(var(--interview-success-foreground))'
+				},
+				'interview-warning': {
+					DEFAULT: 'hsl(var(--interview-warning))',
+					foreground: 'hsl(var(--interview-warning-foreground))'
+				},
+				'interview-calm': 'hsl(var(--interview-calm))',
+				'interview-professional': 'hsl(var(--interview-professional))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
