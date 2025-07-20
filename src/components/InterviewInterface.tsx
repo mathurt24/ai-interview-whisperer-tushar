@@ -145,23 +145,71 @@ export default function InterviewInterface({
   };
 
   const evaluateAnswer = (questionText: string, answerText: string): { score: number; feedback: string } => {
-    // Mock AI evaluation - in real implementation, this would call an AI service
-    const wordCount = answerText.trim().split(' ').length;
-    const hasKeywords = currentQuestion.type === 'technical' ? 
-      answerText.toLowerCase().includes('react') || answerText.toLowerCase().includes('javascript') :
-      answerText.toLowerCase().includes('team') || answerText.toLowerCase().includes('challenge');
+    const words = answerText.trim().split(' ');
+    const wordCount = words.length;
+    const questionLower = questionText.toLowerCase();
+    const answerLower = answerText.toLowerCase();
     
-    let score = 5; // Base score
-    if (wordCount > 50) score += 2;
-    if (wordCount > 100) score += 1;
-    if (hasKeywords) score += 2;
-    if (answerText.includes('example') || answerText.includes('experience')) score += 1;
+    let score = 0;
+    let feedback = "";
     
-    score = Math.min(score, 10);
+    // Base completeness scoring
+    if (wordCount < 20) {
+      score = Math.random() * 3 + 1; // 1-4
+      feedback = "Answer too brief. Needs more detail and examples.";
+    } else if (wordCount < 50) {
+      score = Math.random() * 3 + 3; // 3-6
+      feedback = "Basic answer provided. Could elaborate with more specific examples.";
+    } else if (wordCount < 100) {
+      score = Math.random() * 3 + 5; // 5-8
+      feedback = "Good detailed response. Shows understanding of the topic.";
+    } else {
+      score = Math.random() * 2 + 7; // 7-9
+      feedback = "Comprehensive answer with excellent detail and examples.";
+    }
     
-    const feedback = score >= 8 ? "Excellent answer with good detail and examples." :
-                    score >= 6 ? "Good answer, could benefit from more specific examples." :
-                    "Answer could be more detailed and comprehensive.";
+    // Technical question evaluation
+    if (currentQuestion.type === 'technical') {
+      const techKeywords = ['react', 'javascript', 'component', 'function', 'api', 'database', 'algorithm', 'performance', 'optimization', 'testing', 'debug', 'framework', 'library', 'async', 'promise'];
+      const foundKeywords = techKeywords.filter(keyword => answerLower.includes(keyword));
+      
+      if (foundKeywords.length >= 3) {
+        score += 1;
+      } else if (foundKeywords.length === 0) {
+        score = Math.max(score - 2, 1);
+        feedback = "Answer lacks technical depth. Include specific technical concepts and examples.";
+      }
+      
+      // Check for code examples or technical specifics
+      if (answerLower.includes('example') || answerLower.includes('for instance') || answerLower.includes('like when')) {
+        score += 0.5;
+      }
+    }
+    
+    // Behavioral question evaluation
+    if (currentQuestion.type === 'behavioral') {
+      const behavioralKeywords = ['team', 'challenge', 'conflict', 'leadership', 'communication', 'problem', 'solution', 'collaboration', 'responsibility', 'goal'];
+      const foundKeywords = behavioralKeywords.filter(keyword => answerLower.includes(keyword));
+      
+      if (foundKeywords.length >= 2) {
+        score += 1;
+      }
+      
+      // STAR method indicators
+      const starIndicators = ['situation', 'task', 'action', 'result', 'when', 'what i did', 'outcome', 'learned'];
+      const foundSTAR = starIndicators.filter(indicator => answerLower.includes(indicator));
+      
+      if (foundSTAR.length >= 2) {
+        score += 1;
+        feedback = "Good use of specific examples and structured response.";
+      } else {
+        feedback = "Consider using specific examples with situation, action, and results.";
+      }
+    }
+    
+    // Cap the score and add some randomness for realism
+    score = Math.min(Math.max(score + (Math.random() * 0.8 - 0.4), 1), 10);
+    score = Math.round(score * 10) / 10; // Round to 1 decimal
     
     return { score, feedback };
   };

@@ -54,42 +54,102 @@ export default function InterviewSummary({
     const behavioralAvg = behavioralAnswers.length > 0 ? 
       behavioralAnswers.reduce((sum, answer) => sum + answer.score, 0) / behavioralAnswers.length : 0;
     
-    const highScores = answers.filter(answer => answer.score >= 8).length;
-    const lowScores = answers.filter(answer => answer.score < 6).length;
+    // Analyze actual transcript content for personalized feedback
+    const allTranscripts = answers.map(answer => answer.transcript).join(' ').toLowerCase();
+    const questionTexts = questions.map(q => q.question.toLowerCase());
     
-    let strengths = "";
-    let improvementAreas = "";
+    // Personalized strengths based on actual performance
+    const strengthsList = [];
     
+    // Technical strengths analysis
     if (technicalAvg >= 7) {
-      strengths += "Strong technical knowledge and problem-solving abilities. ";
+      const techKeywords = ['react', 'javascript', 'component', 'api', 'algorithm', 'performance', 'testing', 'database', 'framework'];
+      const mentionedTech = techKeywords.filter(keyword => allTranscripts.includes(keyword));
+      if (mentionedTech.length >= 3) {
+        strengthsList.push(`Demonstrated solid understanding of ${mentionedTech.slice(0, 3).join(', ')}`);
+      } else if (mentionedTech.length > 0) {
+        strengthsList.push(`Shows knowledge of ${mentionedTech.join(', ')} concepts`);
+      }
+      
+      if (allTranscripts.includes('example') || allTranscripts.includes('experience')) {
+        strengthsList.push("Effectively uses real-world examples to explain concepts");
+      }
     }
+    
+    // Behavioral strengths analysis
     if (behavioralAvg >= 7) {
-      strengths += "Excellent communication and interpersonal skills. ";
+      if (allTranscripts.includes('team') && allTranscripts.includes('collaboration')) {
+        strengthsList.push("Strong team collaboration and communication skills");
+      }
+      if (allTranscripts.includes('challenge') || allTranscripts.includes('problem')) {
+        strengthsList.push("Demonstrates problem-solving mindset and resilience");
+      }
+      if (allTranscripts.includes('leadership') || allTranscripts.includes('led')) {
+        strengthsList.push("Shows leadership potential and initiative");
+      }
     }
-    if (highScores >= 3) {
-      strengths += "Consistent high-quality responses across multiple areas. ";
+    
+    // Communication analysis
+    const avgWordCount = answers.reduce((sum, answer) => sum + answer.transcript.split(' ').length, 0) / answers.length;
+    if (avgWordCount > 80) {
+      strengthsList.push("Provides comprehensive and detailed responses");
     }
+    
+    // Score consistency
+    const scoreVariance = Math.max(...answers.map(a => a.score)) - Math.min(...answers.map(a => a.score));
+    if (scoreVariance <= 2 && averageScore >= 7) {
+      strengthsList.push("Consistent performance across different question types");
+    }
+    
+    // Improvement areas based on actual weaknesses
+    const improvementsList = [];
     
     if (technicalAvg < 6) {
-      improvementAreas += "Technical skills need development and practice. ";
-    }
-    if (behavioralAvg < 6) {
-      improvementAreas += "Communication and soft skills could be enhanced. ";
-    }
-    if (lowScores >= 2) {
-      improvementAreas += "Several areas need improvement before meeting role requirements. ";
+      const weakTechAreas = [];
+      if (questionTexts.some(q => q.includes('react')) && !allTranscripts.includes('react')) {
+        weakTechAreas.push("React framework concepts");
+      }
+      if (questionTexts.some(q => q.includes('javascript')) && !allTranscripts.includes('javascript')) {
+        weakTechAreas.push("JavaScript fundamentals");
+      }
+      if (weakTechAreas.length > 0) {
+        improvementsList.push(`Needs deeper understanding of ${weakTechAreas.join(' and ')}`);
+      } else {
+        improvementsList.push("Technical knowledge requires strengthening with more hands-on practice");
+      }
     }
     
-    if (!strengths) strengths = "Shows potential in several areas of the role.";
-    if (!improvementAreas) improvementAreas = "Minor areas for growth and development.";
+    if (behavioralAvg < 6) {
+      if (!allTranscripts.includes('situation') && !allTranscripts.includes('result')) {
+        improvementsList.push("Should structure answers using STAR method (Situation, Task, Action, Result)");
+      }
+      if (avgWordCount < 40) {
+        improvementsList.push("Responses need more detail and specific examples");
+      }
+    }
+    
+    // Specific answer quality issues
+    const shortAnswers = answers.filter(a => a.transcript.split(' ').length < 30).length;
+    if (shortAnswers >= 2) {
+      improvementsList.push("Many answers too brief - provide more comprehensive explanations");
+    }
+    
+    const lowScoreAnswers = answers.filter(a => a.score < 5);
+    if (lowScoreAnswers.length >= 2) {
+      improvementsList.push("Several key areas need improvement before meeting role requirements");
+    }
+    
+    // Default fallbacks
+    const strengths = strengthsList.length > 0 ? strengthsList.join('. ') : "Shows potential and basic understanding of role requirements";
+    const improvementAreas = improvementsList.length > 0 ? improvementsList.join('. ') : "Continue developing skills and gaining practical experience";
     
     let recommendation: "Hire" | "Maybe" | "No" = "No";
-    if (averageScore >= 8) recommendation = "Hire";
-    else if (averageScore >= 6.5) recommendation = "Maybe";
+    if (averageScore >= 7.5) recommendation = "Hire";
+    else if (averageScore >= 5.5) recommendation = "Maybe";
     
     return {
-      strengths: strengths.trim(),
-      improvementAreas: improvementAreas.trim(),
+      strengths,
+      improvementAreas,
       finalRating: Math.round(averageScore * 10) / 10,
       recommendation
     };

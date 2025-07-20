@@ -2,7 +2,9 @@ import { useState } from "react";
 import CandidateForm from "@/components/CandidateForm";
 import InterviewInterface from "@/components/InterviewInterface";
 import InterviewSummary from "@/components/InterviewSummary";
+import AdminDashboard from "@/components/AdminDashboard";
 import { generateQuestions } from "@/lib/questionGenerator";
+import { Button } from "@/components/ui/button";
 
 interface CandidateData {
   name: string;
@@ -24,7 +26,7 @@ interface Answer {
   feedback: string;
 }
 
-type InterviewStage = "form" | "interview" | "summary";
+type InterviewStage = "form" | "interview" | "summary" | "admin";
 
 const Index = () => {
   const [stage, setStage] = useState<InterviewStage>("form");
@@ -51,9 +53,30 @@ const Index = () => {
     setAnswers([]);
   };
 
+  const showAdminDashboard = () => {
+    setStage("admin");
+  };
+
+  const backToForm = () => {
+    setStage("form");
+  };
+
   switch (stage) {
     case "form":
-      return <CandidateForm onSubmit={handleFormSubmit} />;
+      return (
+        <div>
+          <div className="fixed top-4 right-4 z-50">
+            <Button
+              variant="outline"
+              onClick={showAdminDashboard}
+              className="text-sm"
+            >
+              Admin Dashboard
+            </Button>
+          </div>
+          <CandidateForm onSubmit={handleFormSubmit} />
+        </div>
+      );
     
     case "interview":
       if (!candidateData) return null;
@@ -77,6 +100,22 @@ const Index = () => {
           answers={answers}
           onStartNew={handleStartNew}
         />
+      );
+    
+    case "admin":
+      return (
+        <div>
+          <div className="fixed top-4 left-4 z-50">
+            <Button
+              variant="outline"
+              onClick={backToForm}
+              className="text-sm"
+            >
+              ← Back to Form
+            </Button>
+          </div>
+          <AdminDashboard />
+        </div>
       );
     
     default:
